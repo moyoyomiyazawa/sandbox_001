@@ -1,26 +1,31 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import "./App.css";
+import { db } from "./firebase";
+import { collection, query, onSnapshot } from "firebase/firestore";
 
-function App() {
+const App: React.FC = () => {
+  const [tasks, setTasks] = useState([{ id: "", title: "" }]);
+  useEffect(() => {
+    const q = query(collection(db, "tasks"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      setTasks(
+        querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          title: doc.data().title,
+        }))
+      );
+    });
+    // onSnapshotの返り値がonSnapshotを停止する関数なので、クリーンナップ関数として設定することで、コンポーネントのアンマウント時にonSnapshotを停止できる
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {tasks.map((task) => (
+        <h3>{task.title}</h3>
+      ))}
     </div>
   );
-}
+};
 
 export default App;
